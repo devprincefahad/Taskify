@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("dagger.hilt.android.plugin")
     id("com.google.devtools.ksp")
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
 }
 
 android {
