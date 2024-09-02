@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,6 +50,7 @@ import dev.prince.taskify.signin.GoogleAuthUiClient
 import dev.prince.taskify.ui.destinations.HomeScreenDestination
 import dev.prince.taskify.ui.home.HomeScreen
 import dev.prince.taskify.ui.theme.Orange
+import dev.prince.taskify.ui.theme.poppinsFamily
 import dev.prince.taskify.util.LocalSnackbar
 import kotlinx.coroutines.launch
 
@@ -128,62 +133,77 @@ fun SignInScreenContent(
     launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>
 ) {
 
-
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Orange)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+
+        Text(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .align(Alignment.CenterHorizontally)
+                .padding(
+                    top = 16.dp,
+                    end = 16.dp
+                )
+                .fillMaxWidth(),
+            text = "Organize your tasks at one place",
+            textAlign = TextAlign.Start,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            style = TextStyle(
+                fontSize = 42.sp,
+                fontFamily = poppinsFamily,
+                lineHeight = 42.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .fillMaxWidth(),
+            onClick = {
+                if (viewModel.isNetworkConnected(connectivityManager)) {
+                    scope.launch {
+                        val signInIntentSender = googleAuthUiClient.signIn()
+                        launcher.launch(
+                            IntentSenderRequest.Builder(
+                                signInIntentSender ?: return@launch
+                            ).build()
+                        )
+                    }
+                } else {
+                    viewModel.showSnackBar("Not connected to the internet")
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Color.White
+            )
         ) {
             Text(
-                text = "",
-                fontSize = 24.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(64.dp))
-
-            Button(
-                onClick = {
-                    if (viewModel.isNetworkConnected(connectivityManager)) {
-                        scope.launch {
-                            val signInIntentSender = googleAuthUiClient.signIn()
-                            launcher.launch(
-                                IntentSenderRequest.Builder(
-                                    signInIntentSender ?: return@launch
-                                ).build()
-                            )
-                        }
-                    } else {
-                        viewModel.showSnackBar("Not connected to the internet")
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(Color.White),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Text(
-                    text = "Get Started",
-                    fontSize = 16.sp,
+                text = "Get Started",
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    fontFamily = poppinsFamily,
                     color = Orange
                 )
-            }
+            )
         }
+
+        Spacer(modifier = Modifier.navigationBarsPadding())
+
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 
@@ -40,7 +41,7 @@ fun TaskifyTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val activity = view.context as Activity
-            val colorInt = Orange.toArgb()
+            val colorInt = Color.Black.toArgb()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 activity.window.navigationBarColor = colorInt
                 activity.window.statusBarColor = colorInt
