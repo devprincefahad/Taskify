@@ -10,7 +10,6 @@ import dagger.hilt.components.SingletonComponent
 import dev.prince.taskify.database.TaskifyDatabase
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
