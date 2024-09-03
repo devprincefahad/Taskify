@@ -19,11 +19,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,11 +45,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -64,9 +60,11 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import dev.prince.taskify.R
 import dev.prince.taskify.database.Task
 import dev.prince.taskify.signin.GoogleAuthUiClient
 import dev.prince.taskify.ui.destinations.SingInScreenDestination
+import dev.prince.taskify.ui.destinations.TaskDetailScreenDestination
 import dev.prince.taskify.ui.theme.Orange
 import dev.prince.taskify.ui.theme.poppinsFamily
 import kotlinx.coroutines.launch
@@ -103,7 +101,6 @@ fun HomeScreen(
     LaunchedEffect(pagerState.currentPage) {
         selectedTab = pagerState.currentPage
     }
-
 
     Scaffold(
         floatingActionButton = {
@@ -194,15 +191,13 @@ fun HomeScreen(
             ) { page ->
                 when (page) {
                     0 -> TaskList(
-                        tasks = allTasks,
-                        onTaskCompleted = viewModel::toggleTaskCompleted,
-                        onTaskStarred = viewModel::toggleTaskStarred
+                        navigator = navigator,
+                        tasks = allTasks
                     )
 
                     1 -> TaskList(
-                        tasks = starredTasks,
-                        onTaskCompleted = viewModel::toggleTaskCompleted,
-                        onTaskStarred = viewModel::toggleTaskStarred
+                        navigator = navigator,
+                        tasks = starredTasks
                     )
                 }
             }
@@ -211,11 +206,7 @@ fun HomeScreen(
 
     if (showAddTaskSheet) {
         AddTaskBottomSheet(
-            onDismiss = { showAddTaskSheet = false },
-            onTaskAdded = { task ->
-                viewModel.addTask(task)
-                showAddTaskSheet = false
-            }
+            onDismiss = { showAddTaskSheet = false }
         )
     }
 
@@ -232,7 +223,7 @@ fun HomeScreen(
 @Composable
 fun AddTaskBottomSheet(
     onDismiss: () -> Unit,
-    onTaskAdded: (Task) -> Unit
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     var taskTitle by remember { mutableStateOf("") }
@@ -260,7 +251,14 @@ fun AddTaskBottomSheet(
             Button(
                 onClick = {
                     if (taskTitle.isNotBlank()) {
-                        onTaskAdded(Task(title = taskTitle, isCompleted = false, isStarred = false))
+                        viewModel.addTask(
+                            Task(
+                                title = taskTitle,
+                                isCompleted = false,
+                                isStarred = false
+                            )
+                        )
+                        onDismiss()
                         keyboardController?.hide()
                     }
                 },
@@ -274,9 +272,8 @@ fun AddTaskBottomSheet(
 
 @Composable
 fun TaskList(
-    tasks: List<Task>,
-    onTaskCompleted: (Task) -> Unit,
-    onTaskStarred: (Task) -> Unit
+    navigator: DestinationsNavigator,
+    tasks: List<Task>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -284,29 +281,36 @@ fun TaskList(
     ) {
         items(tasks) { task ->
             TaskItem(
-                task = task,
-                onTaskCompleted = { onTaskCompleted(task) },
-                onTaskStarred = { onTaskStarred(task) }
+                navigator = navigator,
+                task = task
             )
         }
     }
 }
 
-
 @Composable
 fun TaskItem(
+    navigator: DestinationsNavigator,
     task: Task,
-    onTaskCompleted: () -> Unit,
-    onTaskStarred: () -> Unit
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable {
+                navigator.navigate(TaskDetailScreenDestination(task.id))
+            },
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = task.isCompleted,
-            onClick = onTaskCompleted,
+            onClick = {
+                if (task.isCompleted) {
+                    viewModel.markTaskAsUncompleted(task)
+                } else {
+                    viewModel.markTaskAsCompleted(task)
+                }
+            },
             colors = RadioButtonDefaults.colors(selectedColor = Orange)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -319,9 +323,17 @@ fun TaskItem(
             ),
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = onTaskStarred) {
+        IconButton(onClick = {
+            if (task.isStarred) {
+                viewModel.unStarTask(task)
+            } else {
+                viewModel.starTask(task)
+            }
+        }) {
             Icon(
-                imageVector = if (task.isStarred) Icons.Filled.Star else Icons.Outlined.Star,
+                painter = if (task.isStarred) painterResource(id = R.drawable.star_filled) else painterResource(
+                    id = R.drawable.star_unfilled
+                ),
                 contentDescription = if (task.isStarred) "Unstar task" else "Star task",
                 tint = if (task.isStarred) Orange else Color.Gray
             )

@@ -11,11 +11,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
-    @Query("SELECT * FROM tasks ORDER BY updatedAt ASC")
+    @Query("SELECT * FROM tasks ORDER BY createdAt ASC")
     fun getAllTasks(): Flow<List<Task>>
 
-    @Query("SELECT * FROM tasks WHERE isStarred = 1 ORDER BY updatedAt ASC")
+    @Query("SELECT * FROM tasks WHERE isStarred = 1 ORDER BY createdAt ASC")
     fun getStarredTasks(): Flow<List<Task>>
+
+    @Query("SELECT * FROM `tasks` WHERE id = :id")
+    fun getTaskById(id: Int): Flow<Task>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: Task)

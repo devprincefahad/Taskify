@@ -6,9 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.prince.taskify.database.Task
 import dev.prince.taskify.database.TaskDao
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,21 +23,27 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun removeTask(task: Task) {
+    fun markTaskAsCompleted(task: Task) {
         viewModelScope.launch {
-            taskDao.deleteTask(task)
+            taskDao.updateTask(task.copy(isCompleted = true))
         }
     }
 
-    fun toggleTaskCompleted(task: Task) {
+    fun markTaskAsUncompleted(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isCompleted = !task.isCompleted))
+            taskDao.updateTask(task.copy(isCompleted = false))
         }
     }
 
-    fun toggleTaskStarred(task: Task) {
+    fun starTask(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isStarred = !task.isStarred))
+            taskDao.updateTask(task.copy(isStarred = true))
+        }
+    }
+
+    fun unStarTask(task: Task) {
+        viewModelScope.launch {
+            taskDao.updateTask(task.copy(isStarred = false))
         }
     }
 }

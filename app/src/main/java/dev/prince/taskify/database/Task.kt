@@ -11,5 +11,5 @@ data class Task(
     val description: String? = null,
     val isCompleted: Boolean = false,
     val isStarred: Boolean = false,
-    val updatedAt: Long? = null
+    val createdAt: Long? = null
 )
