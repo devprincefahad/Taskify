@@ -2,10 +2,16 @@ package dev.prince.taskify.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Orange = Color(0xFFFA8231)
-val OrangeLight = Color(0xFFFD9644)
-val LightGray = Color(0x9A646464)
+// Light mode colors
+val LightPrimary = Color(0xFF1a73e8)
+val LightOnPrimary = Color.White
+val LightBackground = Color.White
+val LightSurface = Color.White
+val LightOnSurface = Color(0xFF202124)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Dark mode colors
+val DarkPrimary = Color(0xFF8ab4f8)
+val DarkOnPrimary = Color(0xFF202124)
+val DarkBackground = Color(0xFF202124)
+val DarkSurface = Color(0xFF202124)
+val DarkOnSurface = Color.White
