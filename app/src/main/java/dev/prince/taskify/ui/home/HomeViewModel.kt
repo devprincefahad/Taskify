@@ -11,10 +11,13 @@ import dev.prince.taskify.database.TaskDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import dev.prince.taskify.sync.FirestoreService
+import kotlinx.coroutines.flow.firstOrNull
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val taskDao: TaskDao
+    private val taskDao: TaskDao,
+    private val firestoreService: FirestoreService
 ) : ViewModel() {
 
     val tasks: Flow<List<Task>> = taskDao.getAllTasks()
@@ -22,33 +25,62 @@ class HomeViewModel @Inject constructor(
 
     var isTaskDescVisible by mutableStateOf(false)
 
+    init {
+        syncDataIfNeeded()
+    }
+
+    private fun syncDataIfNeeded() {
+        viewModelScope.launch {
+            val localTasks = taskDao.getAllTasks().firstOrNull()
+            if (localTasks.isNullOrEmpty()) {
+                firestoreService.getAllTasksFromFirestore { tasksFromFirestore ->
+                    viewModelScope.launch {
+                        tasksFromFirestore.forEach { task ->
+                            taskDao.insertTask(task)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun addTask(task: Task) {
         viewModelScope.launch {
-            taskDao.insertTask(task)
+            val taskId = taskDao.insertTask(task)
+            val updatedTask = task.copy(id = taskId.toInt())
+            firestoreService.addTaskToFirestore(updatedTask)
         }
     }
 
     fun markTaskAsCompleted(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isCompleted = true))
+            val updatedTask = task.copy(isCompleted = true)
+            taskDao.updateTask(updatedTask)
+            firestoreService.updateTaskInFirestore(updatedTask)
         }
     }
 
     fun markTaskAsUncompleted(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isCompleted = false))
+            val updatedTask = task.copy(isCompleted = false)
+            taskDao.updateTask(updatedTask)
+            firestoreService.updateTaskInFirestore(updatedTask)
         }
     }
 
     fun starTask(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isStarred = true))
+            val updatedTask = task.copy(isStarred = true)
+            taskDao.updateTask(updatedTask)
+            firestoreService.updateTaskInFirestore(updatedTask)
         }
     }
 
     fun unStarTask(task: Task) {
         viewModelScope.launch {
-            taskDao.updateTask(task.copy(isStarred = false))
+            val updatedTask = task.copy(isStarred = false)
+            taskDao.updateTask(updatedTask)
+            firestoreService.updateTaskInFirestore(updatedTask)
         }
     }
 }

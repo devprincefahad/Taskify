@@ -2,12 +2,14 @@ package dev.prince.taskify.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.prince.taskify.database.TaskifyDatabase
+import dev.prince.taskify.sync.FirestoreService
 import javax.inject.Singleton
 
 @Module
@@ -26,4 +28,15 @@ object AppModule {
     @Provides
     fun provideTaskDao(db: TaskifyDatabase) = db.taskDao()
 
+    @Provides
+    @Singleton
+    fun provideFirebaseFirestore(): FirebaseFirestore {
+        return FirebaseFirestore.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirestoreService(firestore: FirebaseFirestore): FirestoreService {
+        return FirestoreService(firestore)
+    }
 }
