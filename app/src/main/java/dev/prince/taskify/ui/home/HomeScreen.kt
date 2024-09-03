@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,8 +27,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -65,7 +68,7 @@ import dev.prince.taskify.database.Task
 import dev.prince.taskify.signin.GoogleAuthUiClient
 import dev.prince.taskify.ui.destinations.SingInScreenDestination
 import dev.prince.taskify.ui.destinations.TaskDetailScreenDestination
-import dev.prince.taskify.ui.theme.Orange
+import dev.prince.taskify.ui.detail.BorderlessEditableField
 import dev.prince.taskify.ui.theme.poppinsFamily
 import kotlinx.coroutines.launch
 
@@ -79,6 +82,7 @@ fun HomeScreen(
 ) {
 
     val context = LocalContext.current
+
     val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = context,
@@ -103,10 +107,11 @@ fun HomeScreen(
     }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskSheet = true },
-                containerColor = Orange
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Task")
             }
@@ -121,13 +126,13 @@ fun HomeScreen(
             Text(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 text = "Taskify",
                 fontWeight = FontWeight.SemiBold,
                 style = TextStyle(
                     fontSize = 26.sp,
                     fontFamily = poppinsFamily,
-                    color = Orange
+                    color = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -138,7 +143,7 @@ fun HomeScreen(
                     if (selectedTab < tabPositions.size) {
                         TabRowDefaults.SecondaryIndicator(
                             modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = Orange,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -227,6 +232,7 @@ fun AddTaskBottomSheet(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     var taskTitle by remember { mutableStateOf("") }
+    var taskDesc by remember { mutableStateOf("") }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -234,38 +240,82 @@ fun AddTaskBottomSheet(
             onDismiss()
         },
         sheetState = rememberModalBottomSheetState(),
+        windowInsets = WindowInsets.ime,
+        dragHandle = {}
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            OutlinedTextField(
+            BorderlessEditableField(
                 value = taskTitle,
-                onValueChange = { taskTitle = it },
-                label = { Text("Task title") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-            Button(
-                onClick = {
-                    if (taskTitle.isNotBlank()) {
-                        viewModel.addTask(
-                            Task(
-                                title = taskTitle,
-                                isCompleted = false,
-                                isStarred = false
-                            )
-                        )
-                        onDismiss()
-                        keyboardController?.hide()
+                onValueChange = {
+                    if (it.length <= 30) {
+                        taskTitle = it
                     }
                 },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text("Add Task")
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                placeholder = "Task Title",
+                maxLines = 2,
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+
+            if (viewModel.isTaskDescVisible) {
+                BorderlessEditableField(
+                    value = taskDesc,
+                    onValueChange = { taskDesc = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    placeholder = "Add details",
+                    maxLines = 5,
+                    textStyle = TextStyle(
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                )
             }
+
+            Row {
+                IconButton(
+                    onClick = {
+                        viewModel.isTaskDescVisible = true
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.details),
+                        contentDescription = "Add details",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = {
+                        if (taskTitle.isNotBlank()) {
+                            viewModel.addTask(
+                                Task(
+                                    title = taskTitle,
+                                    isCompleted = false,
+                                    isStarred = false,
+                                    description = taskDesc
+                                )
+                            )
+                            viewModel.isTaskDescVisible = false
+                            onDismiss()
+                            keyboardController?.hide()
+                        }
+                    }
+                ) {
+                    Text("Add Task")
+                }
+            }
+
         }
     }
 }
@@ -311,7 +361,7 @@ fun TaskItem(
                     viewModel.markTaskAsCompleted(task)
                 }
             },
-            colors = RadioButtonDefaults.colors(selectedColor = Orange)
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
@@ -335,7 +385,7 @@ fun TaskItem(
                     id = R.drawable.star_unfilled
                 ),
                 contentDescription = if (task.isStarred) "Unstar task" else "Star task",
-                tint = if (task.isStarred) Orange else Color.Gray
+                tint = if (task.isStarred) MaterialTheme.colorScheme.primary else Color.Gray
             )
         }
     }

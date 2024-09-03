@@ -2,7 +2,6 @@ package dev.prince.taskify.ui.detail
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,27 +11,21 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -45,8 +38,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.prince.taskify.R
-import dev.prince.taskify.ui.theme.Orange
-import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +77,7 @@ fun TaskDetailScreen(
                             painter = if (isStarred) painterResource(id = R.drawable.star_filled)
                             else painterResource(id = R.drawable.star_unfilled),
                             contentDescription = if (isStarred) "Unstar task" else "Star task",
-                            tint = if (isStarred) Orange else Color.Gray
+                            tint = if (isStarred) MaterialTheme.colorScheme.primary else Color.Gray
                         )
                     }
                     IconButton(onClick = { showMenu = !showMenu }) {
@@ -102,7 +93,7 @@ fun TaskDetailScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent,)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -114,7 +105,10 @@ fun TaskDetailScreen(
                     viewModel.updateTask(task.copy(title = newTitle))
                 },
                 placeholder = "Enter title",
-                textStyle = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                textStyle = TextStyle(
+                    fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
                 maxLines = 1
             )
 
@@ -127,7 +121,10 @@ fun TaskDetailScreen(
                     viewModel.updateTask(task.copy(description = newDescription))
                 },
                 placeholder = "Add details",
-                textStyle = TextStyle(fontSize = 16.sp),
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
                 maxLines = 20
             )
         }
@@ -148,9 +145,11 @@ fun BorderlessEditableField(
         onValueChange = onValueChange,
         textStyle = textStyle,
         decorationBox = { innerTextField ->
-            Box(modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Box(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,

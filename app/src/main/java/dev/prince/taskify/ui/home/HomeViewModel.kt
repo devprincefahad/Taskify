@@ -1,5 +1,8 @@
 package dev.prince.taskify.ui.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +19,8 @@ class HomeViewModel @Inject constructor(
 
     val tasks: Flow<List<Task>> = taskDao.getAllTasks()
     val starredTasks: Flow<List<Task>> = taskDao.getStarredTasks()
+
+    var isTaskDescVisible by mutableStateOf(false)
 
     fun addTask(task: Task) {
         viewModelScope.launch {
