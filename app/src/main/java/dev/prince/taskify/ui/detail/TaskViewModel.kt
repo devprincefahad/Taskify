@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.prince.taskify.database.Task
 import dev.prince.taskify.database.TaskDao
 import dev.prince.taskify.sync.FirestoreService
+import dev.prince.taskify.util.oneShotFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,6 +16,8 @@ class TaskViewModel @Inject constructor(
     private val taskDao: TaskDao,
     private val firestoreService: FirestoreService
 ) : ViewModel() {
+
+    val messages = oneShotFlow<String>()
 
     fun getTaskById(id: Int): Flow<Task> {
         return taskDao.getTaskById(id)
@@ -31,6 +34,12 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             taskDao.deleteTask(task)
             firestoreService.deleteTaskFromFirestore(task.id)
+            messages.tryEmit("Task Deleted!")
         }
     }
+
+    fun showSnackBarMessage(msg: String) {
+        messages.tryEmit(msg)
+    }
+
 }

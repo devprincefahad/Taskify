@@ -1,16 +1,11 @@
 package dev.prince.taskify.ui.detail
 
-import androidx.compose.foundation.layout.Box
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +33,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.prince.taskify.R
+import dev.prince.taskify.ui.components.BorderlessEditableField
+import dev.prince.taskify.ui.theme.poppinsFamily
+import dev.prince.taskify.util.LocalSnackbar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +45,15 @@ fun TaskDetailScreen(
     taskId: Int,
     viewModel: TaskViewModel = hiltViewModel()
 ) {
+
+    val snackbar = LocalSnackbar.current
+
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect {
+            snackbar(it)
+        }
+    }
+
     val task = viewModel.getTaskById(taskId).collectAsState(initial = null).value
 
     if (task != null) {
@@ -62,8 +69,16 @@ fun TaskDetailScreen(
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = { navigator.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = {
+                            navigator.popBackStack()
+                            viewModel.showSnackBarMessage("Task Updated!")
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.arrow_back),
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 actions = {
@@ -81,7 +96,10 @@ fun TaskDetailScreen(
                         )
                     }
                     IconButton(onClick = { showMenu = !showMenu }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                        Icon(
+                            painter = painterResource(id = R.drawable.more_vert),
+                            contentDescription = "More options"
+                        )
                     }
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                         DropdownMenuItem(
@@ -89,7 +107,16 @@ fun TaskDetailScreen(
                                 viewModel.deleteTask(task)
                                 navigator.popBackStack()
                             },
-                            text = { Text("Delete") }
+                            text = {
+                                Text(
+                                    text = "Delete",
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = poppinsFamily
+                                    )
+                                )
+                            }
                         )
                     }
                 },
@@ -129,37 +156,9 @@ fun TaskDetailScreen(
             )
         }
     }
-}
 
-@Composable
-fun BorderlessEditableField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    textStyle: TextStyle,
-    maxLines: Int,
-    modifier: Modifier = Modifier
-) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = textStyle,
-        decorationBox = { innerTextField ->
-            Box(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                if (value.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        style = textStyle.copy(color = Color.Gray)
-                    )
-                }
-                innerTextField()
-            }
-        },
-        maxLines = maxLines,
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-    )
+    BackHandler {
+        navigator.popBackStack()
+        viewModel.showSnackBarMessage("Task Updated!")
+    }
 }

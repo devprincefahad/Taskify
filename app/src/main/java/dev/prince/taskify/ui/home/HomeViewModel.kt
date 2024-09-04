@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import dev.prince.taskify.sync.FirestoreService
+import dev.prince.taskify.util.oneShotFlow
 import kotlinx.coroutines.flow.firstOrNull
 
 @HiltViewModel
@@ -24,6 +25,8 @@ class HomeViewModel @Inject constructor(
     val starredTasks: Flow<List<Task>> = taskDao.getStarredTasks()
 
     var isTaskDescVisible by mutableStateOf(false)
+
+    val messages = oneShotFlow<String>()
 
     init {
         syncDataIfNeeded()
@@ -49,6 +52,7 @@ class HomeViewModel @Inject constructor(
             val taskId = taskDao.insertTask(task)
             val updatedTask = task.copy(id = taskId.toInt())
             firestoreService.addTaskToFirestore(updatedTask)
+            messages.tryEmit("Task Added!")
         }
     }
 
