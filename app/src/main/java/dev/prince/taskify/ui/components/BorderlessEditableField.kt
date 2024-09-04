@@ -26,6 +26,7 @@ fun BorderlessEditableField(
     modifier: Modifier = Modifier
 ) {
     BasicTextField(
+        modifier = modifier,
         value = value,
         onValueChange = onValueChange,
         textStyle = textStyle,

@@ -1,9 +1,11 @@
 package dev.prince.taskify.ui.detail
 
+import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenu
@@ -67,12 +69,12 @@ fun TaskDetailScreen(
                 .fillMaxSize()
         ) {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { },
                 navigationIcon = {
                     IconButton(
                         onClick = {
                             navigator.popBackStack()
-                            viewModel.showSnackBarMessage("Task Updated!")
                         }
                     ) {
                         Icon(
@@ -133,8 +135,10 @@ fun TaskDetailScreen(
                 },
                 placeholder = "Enter title",
                 textStyle = TextStyle(
-                    fontSize = 24.sp, fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontFamily = poppinsFamily
                 ),
                 maxLines = 1
             )
@@ -150,7 +154,9 @@ fun TaskDetailScreen(
                 placeholder = "Add details",
                 textStyle = TextStyle(
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = poppinsFamily
                 ),
                 maxLines = 20
             )
@@ -159,6 +165,5 @@ fun TaskDetailScreen(
 
     BackHandler {
         navigator.popBackStack()
-        viewModel.showSnackBarMessage("Task Updated!")
     }
 }

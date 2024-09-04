@@ -30,13 +30,19 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
+
+    @Provides
+    @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore {
         return FirebaseFirestore.getInstance()
     }
 
     @Provides
     @Singleton
-    fun provideFirestoreService(firestore: FirebaseFirestore): FirestoreService {
-        return FirestoreService(firestore)
+    fun provideFirestoreService(firestore: FirebaseFirestore, context: Context): FirestoreService {
+        return FirestoreService(firestore, context)
     }
 }

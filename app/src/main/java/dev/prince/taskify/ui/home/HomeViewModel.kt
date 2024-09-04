@@ -1,5 +1,6 @@
 package dev.prince.taskify.ui.home
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import dev.prince.taskify.sync.FirestoreService
-import dev.prince.taskify.util.oneShotFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 
 @HiltViewModel
@@ -26,7 +28,8 @@ class HomeViewModel @Inject constructor(
 
     var isTaskDescVisible by mutableStateOf(false)
 
-    val messages = oneShotFlow<String>()
+    private val _messages = MutableSharedFlow<String>()
+    val messages: SharedFlow<String> get() = _messages
 
     init {
         syncDataIfNeeded()
@@ -38,9 +41,8 @@ class HomeViewModel @Inject constructor(
             if (localTasks.isNullOrEmpty()) {
                 firestoreService.getAllTasksFromFirestore { tasksFromFirestore ->
                     viewModelScope.launch {
-                        tasksFromFirestore.forEach { task ->
-                            taskDao.insertTask(task)
-                        }
+                        taskDao.insertTasks(tasksFromFirestore)
+                        Log.d("HomeViewModel", "Tasks inserted into local database")
                     }
                 }
             }
@@ -49,10 +51,10 @@ class HomeViewModel @Inject constructor(
 
     fun addTask(task: Task) {
         viewModelScope.launch {
-            val taskId = taskDao.insertTask(task)
-            val updatedTask = task.copy(id = taskId.toInt())
+            val taskId = taskDao.insertTask(task).toInt()
+            val updatedTask = task.copy(id = taskId)
             firestoreService.addTaskToFirestore(updatedTask)
-            messages.tryEmit("Task Added!")
+            _messages.emit("Task Added!")
         }
     }
 

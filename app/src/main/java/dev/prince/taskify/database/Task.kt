@@ -11,7 +11,7 @@ data class Task(
     val description: String? = null,
     val isCompleted: Boolean = false,
     val isStarred: Boolean = false,
-    val createdAt: Long? = null
+    val createdAt: Long? = System.currentTimeMillis()
 ) {
     constructor() : this(0, "", null, false, false, null)
 }

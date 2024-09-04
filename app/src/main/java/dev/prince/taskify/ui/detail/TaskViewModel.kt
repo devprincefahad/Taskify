@@ -33,7 +33,7 @@ class TaskViewModel @Inject constructor(
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             taskDao.deleteTask(task)
-            firestoreService.deleteTaskFromFirestore(task.id)
+            firestoreService.deleteTaskFromFirestore(task.id.toString())
             messages.tryEmit("Task Deleted!")
         }
     }

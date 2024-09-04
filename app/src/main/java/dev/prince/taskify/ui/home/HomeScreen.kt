@@ -3,25 +3,36 @@ package dev.prince.taskify.ui.home
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,10 +40,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +77,6 @@ fun HomeScreen(
     navigator: DestinationsNavigator,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-
     val snackbar = LocalSnackbar.current
 
     LaunchedEffect(Unit) {
@@ -88,44 +104,52 @@ fun HomeScreen(
     var showAddTaskSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(pagerState.currentPage) {
         selectedTab = pagerState.currentPage
     }
 
-    Scaffold(
-        modifier = Modifier.imePadding(),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddTaskSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.add),
-                    contentDescription = "Add Task"
-                )
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        var fabHeight by remember { mutableStateOf(0.dp) }
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
         ) {
-            Text(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 16.dp),
-                text = "Taskify",
-                fontWeight = FontWeight.SemiBold,
-                style = TextStyle(
-                    fontSize = 26.sp,
-                    fontFamily = poppinsFamily,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Center)
+                        .padding(horizontal = 16.dp),
+                    text = "Taskify",
+                    fontWeight = FontWeight.SemiBold,
+                    style = TextStyle(
+                        fontSize = 26.sp,
+                        fontFamily = poppinsFamily,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                IconButton(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    onClick = {
+
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.swap_vert),
+                        contentDescription = "Sort",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
 
             TabRow(
@@ -187,16 +211,40 @@ fun HomeScreen(
                     .weight(1f)
             ) { page ->
                 when (page) {
-                    0 -> TaskList(
-                        navigator = navigator,
-                        tasks = allTasks
-                    )
+                    0 -> {
+                        val sortedTasks = allTasks.sortedBy { it.isCompleted }
+                        TaskList(
+                            navigator = navigator,
+                            tasks = sortedTasks,
+                            bottomPadding = fabHeight + 16.dp
+                        )
+                    }
 
                     1 -> TaskList(
                         navigator = navigator,
-                        tasks = starredTasks
+                        tasks = starredTasks,
+                        bottomPadding = fabHeight + 16.dp
                     )
                 }
+            }
+        }
+
+        with(LocalDensity.current) {
+            FloatingActionButton(
+                onClick = { showAddTaskSheet = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                    .onPlaced {
+                        fabHeight = it.size.height.toDp()
+                    },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = "Add Task",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
@@ -208,7 +256,12 @@ fun HomeScreen(
     }
 
     BackHandler {
-        if (showAddTaskSheet) {
+        if (selectedTab == 1) {
+            selectedTab = 0
+            scope.launch {
+                pagerState.animateScrollToPage(0)
+            }
+        } else if (showAddTaskSheet) {
             showAddTaskSheet = false
         } else {
             (context as ComponentActivity).finish()

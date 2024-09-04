@@ -1,10 +1,14 @@
 package dev.prince.taskify.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,30 +32,32 @@ import dev.prince.taskify.ui.destinations.TaskDetailScreenDestination
 import dev.prince.taskify.ui.home.HomeViewModel
 import dev.prince.taskify.ui.theme.poppinsFamily
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TaskItem(
+fun LazyItemScope.TaskItem(
     navigator: DestinationsNavigator,
     task: Task,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     Row(
         modifier = Modifier
+            .animateItemPlacement()
             .fillMaxWidth()
             .clickable {
                 navigator.navigate(TaskDetailScreenDestination(task.id))
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(
-            selected = task.isCompleted,
-            onClick = {
-                if (task.isCompleted) {
-                    viewModel.markTaskAsUncompleted(task)
-                } else {
+        Checkbox(
+            checked = task.isCompleted,
+            onCheckedChange = { isChecked ->
+                if (isChecked) {
                     viewModel.markTaskAsCompleted(task)
+                } else {
+                    viewModel.markTaskAsUncompleted(task)
                 }
             },
-            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
