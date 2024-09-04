@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +69,7 @@ import dev.prince.taskify.ui.components.TaskList
 import dev.prince.taskify.ui.destinations.SingInScreenDestination
 import dev.prince.taskify.ui.theme.poppinsFamily
 import dev.prince.taskify.util.LocalSnackbar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -78,11 +81,17 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val snackbar = LocalSnackbar.current
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect {
             snackbar(it)
         }
+    }
+
+    LaunchedEffect(true) {
+        delay(400)
+        isLoading = false
     }
 
     val context = LocalContext.current
@@ -121,35 +130,19 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Box(
+            Text(
                 modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.Center)
-                        .padding(horizontal = 16.dp),
-                    text = "Taskify",
-                    fontWeight = FontWeight.SemiBold,
-                    style = TextStyle(
-                        fontSize = 26.sp,
-                        fontFamily = poppinsFamily,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 16.dp),
+                text = "Taskify",
+                fontWeight = FontWeight.SemiBold,
+                style = TextStyle(
+                    fontSize = 26.sp,
+                    fontFamily = poppinsFamily,
+                    color = MaterialTheme.colorScheme.primary
                 )
+            )
 
-                IconButton(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    onClick = {
-
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.swap_vert),
-                        contentDescription = "Sort",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
             Spacer(modifier = Modifier.height(16.dp))
 
             TabRow(
@@ -212,19 +205,33 @@ fun HomeScreen(
             ) { page ->
                 when (page) {
                     0 -> {
-                        val sortedTasks = allTasks.sortedBy { it.isCompleted }
-                        TaskList(
-                            navigator = navigator,
-                            tasks = sortedTasks,
-                            bottomPadding = fabHeight + 16.dp
-                        )
+                        if (isLoading) {
+                            ProgressIndicator()
+                        } else if (allTasks.isEmpty()) {
+                            EmptyStateMessage("No Tasks Added!")
+                        } else {
+                            val sortedTasks = allTasks.sortedBy { it.isCompleted }
+                            TaskList(
+                                navigator = navigator,
+                                tasks = sortedTasks,
+                                bottomPadding = fabHeight + 16.dp
+                            )
+                        }
                     }
 
-                    1 -> TaskList(
-                        navigator = navigator,
-                        tasks = starredTasks,
-                        bottomPadding = fabHeight + 16.dp
-                    )
+                    1 -> {
+                        if (isLoading) {
+                            ProgressIndicator()
+                        } else if (starredTasks.isEmpty()) {
+                            EmptyStateMessage("No Tasks Starred!")
+                        } else {
+                            TaskList(
+                                navigator = navigator,
+                                tasks = starredTasks,
+                                bottomPadding = fabHeight + 16.dp
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -266,5 +273,42 @@ fun HomeScreen(
         } else {
             (context as ComponentActivity).finish()
         }
+    }
+}
+
+
+@Composable
+fun EmptyStateMessage(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontFamily = poppinsFamily
+            )
+        )
+    }
+}
+
+@Composable
+fun ProgressIndicator() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier
+                .size(36.dp)
+        )
     }
 }

@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
-    @Query("SELECT * FROM tasks ORDER BY createdAt ASC")
+    @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
     fun getAllTasks(): Flow<List<Task>>
 
-    @Query("SELECT * FROM tasks WHERE isStarred = 1 ORDER BY createdAt ASC")
+    @Query("SELECT * FROM tasks WHERE isStarred = 1 ORDER BY createdAt DESC")
     fun getStarredTasks(): Flow<List<Task>>
 
     @Query("SELECT * FROM `tasks` WHERE id = :id")

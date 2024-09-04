@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 
 @Destination
 @Composable
-fun SingInScreen(
+fun SignInScreen(
     viewModel: SignInViewModel = hiltViewModel(),
     navigator: DestinationsNavigator
 ) {
@@ -105,7 +105,6 @@ fun SingInScreen(
     }
 
     SignInScreenContent(
-        navigator = navigator,
         googleAuthUiClient = googleAuthUiClient,
         launcher = launcher
     )
@@ -120,7 +119,6 @@ fun SingInScreen(
 @Composable
 fun SignInScreenContent(
     viewModel: SignInViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator,
     googleAuthUiClient: GoogleAuthUiClient,
     launcher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>
 ) {

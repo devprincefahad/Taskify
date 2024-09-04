@@ -12,7 +12,7 @@ import dev.prince.taskify.database.TaskDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import dev.prince.taskify.sync.FirestoreService
+import dev.prince.taskify.sync.FirestoreSync
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.firstOrNull
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val taskDao: TaskDao,
-    private val firestoreService: FirestoreService
+    private val firestoreSync: FirestoreSync
 ) : ViewModel() {
 
     val tasks: Flow<List<Task>> = taskDao.getAllTasks()
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val localTasks = taskDao.getAllTasks().firstOrNull()
             if (localTasks.isNullOrEmpty()) {
-                firestoreService.getAllTasksFromFirestore { tasksFromFirestore ->
+                firestoreSync.getAllTasksFromFirestore { tasksFromFirestore ->
                     viewModelScope.launch {
                         taskDao.insertTasks(tasksFromFirestore)
                         Log.d("HomeViewModel", "Tasks inserted into local database")
@@ -53,7 +53,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val taskId = taskDao.insertTask(task).toInt()
             val updatedTask = task.copy(id = taskId)
-            firestoreService.addTaskToFirestore(updatedTask)
+            firestoreSync.addTaskToFirestore(updatedTask)
             _messages.emit("Task Added!")
         }
     }
@@ -62,7 +62,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val updatedTask = task.copy(isCompleted = true)
             taskDao.updateTask(updatedTask)
-            firestoreService.updateTaskInFirestore(updatedTask)
+            firestoreSync.updateTaskInFirestore(updatedTask)
         }
     }
 
@@ -70,7 +70,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val updatedTask = task.copy(isCompleted = false)
             taskDao.updateTask(updatedTask)
-            firestoreService.updateTaskInFirestore(updatedTask)
+            firestoreSync.updateTaskInFirestore(updatedTask)
         }
     }
 
@@ -78,7 +78,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val updatedTask = task.copy(isStarred = true)
             taskDao.updateTask(updatedTask)
-            firestoreService.updateTaskInFirestore(updatedTask)
+            firestoreSync.updateTaskInFirestore(updatedTask)
         }
     }
 
@@ -86,7 +86,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val updatedTask = task.copy(isStarred = false)
             taskDao.updateTask(updatedTask)
-            firestoreService.updateTaskInFirestore(updatedTask)
+            firestoreSync.updateTaskInFirestore(updatedTask)
         }
     }
 }

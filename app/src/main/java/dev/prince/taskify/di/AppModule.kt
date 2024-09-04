@@ -9,7 +9,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.prince.taskify.database.TaskifyDatabase
-import dev.prince.taskify.sync.FirestoreService
+import dev.prince.taskify.sync.FirestoreSync
 import javax.inject.Singleton
 
 @Module
@@ -42,7 +42,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirestoreService(firestore: FirebaseFirestore, context: Context): FirestoreService {
-        return FirestoreService(firestore, context)
+    fun provideFirestoreSync(firestore: FirebaseFirestore, context: Context): FirestoreSync {
+        return FirestoreSync(firestore, context)
     }
 }

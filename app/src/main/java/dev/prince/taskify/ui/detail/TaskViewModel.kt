@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.prince.taskify.database.Task
 import dev.prince.taskify.database.TaskDao
-import dev.prince.taskify.sync.FirestoreService
+import dev.prince.taskify.sync.FirestoreSync
 import dev.prince.taskify.util.oneShotFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskViewModel @Inject constructor(
     private val taskDao: TaskDao,
-    private val firestoreService: FirestoreService
+    private val firestoreService: FirestoreSync
 ) : ViewModel() {
 
     val messages = oneShotFlow<String>()
